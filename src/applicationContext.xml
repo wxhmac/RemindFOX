@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:task="http://www.springframework.org/schema/task" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	                    http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	      http://www.springframework.org/schema/aop      
+          http://www.springframework.org/schema/aop/spring-aop-3.1.xsd     
+          http://www.springframework.org/schema/tx      
+          http://www.springframework.org/schema/tx/spring-tx-3.1.xsd">
+
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		destroy-method="close">
+		<!-- 指定连接数据库的驱动 -->
+		<property name="driverClass" value="com.mysql.jdbc.Driver" />
+		<!-- 指定连接数据库的URL -->
+		<property name="jdbcUrl"
+			value="jdbc:mysql://localhost:3306/mvd?useunicode=true&amp;characterEncoding=utf8" />
+		<!-- 指定连接数据库的用户名 -->
+		<property name="user" value="root" />
+		<!-- 指定连接数据库的密码 -->
+		<property name="password" value="wxhsql" />
+		<!-- 指定连接数据库连接池的最大连接数 -->
+		<property name="maxPoolSize" value="50" />
+		<!-- 指定连接数据库连接池的最小连接数 -->
+		<property name="minPoolSize" value="1" />
+		<!-- 指定连接数据库连接池的初始化连接数 -->
+		<property name="initialPoolSize" value="1" />
+		<!-- 指定连接数据库连接池的连接的最大空闲时间 -->
+		<property name="maxIdleTime" value="20" />
+	</bean>
+
+	<!-- class="org.springframework.orm.hibernate3.LocalSessionFactoryBean"> -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean"
+		p:configLocation="classpath:hibernate.cfg.xml">
+		<property name="dataSource">
+			<ref bean="dataSource" />
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">
+					org.hibernate.dialect.MySQLDialect
+				</prop>
+				<prop key="hibernate.show_sql">false</prop>
+				<prop key="hibernate.format_sql">false</prop>
+				<prop key="hibernate.use_sql_comments">false</prop>
+				<prop key="hibernate.temp.use_jdbc_metadata_defaults">false</prop>
+				<prop key="hibernate.jdbc.use_scrollable_resultset">false</prop>
+			</props>
+		</property>
+	</bean>
+	<!-- 事务管理器 -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<!-- 配置那些类的方法进行事务管理,需要aopalliance-1.0.jar和aspectjweaver.jar，还需要参考tx:advice的设置 -->
+	<!-- 需要引入tx的命名空间 -->
+	<!-- 这是事务通知操作，使用的事务管理器引用自 transactionManager -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<!--指定哪些方法需要加入事务，这里懒惰一下全部加入，可以使用通配符来只加入需要的方法 -->
+			<tx:method name="save*" propagation="REQUIRED"
+				rollback-for="java.lang.Exception" />
+			<tx:method name="add*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="update*" propagation="REQUIRED"
+				rollback-for="java.lang.Exception" />
+			<tx:method name="del*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="get*" propagation="REQUIRED" read-only="true" />
+			<tx:method name="query*" propagation="REQUIRED" read-only="true" />
+			<tx:method name="loginVerify*" propagation="REQUIRED"
+				read-only="true" />
+			<tx:method name="submit*" propagation="REQUIRED"
+				rollback-for="java.lang.Exception" />
+		</tx:attributes>
+	</tx:advice>
+	<!--需要引入aop的命名空间 -->
+	<aop:config expose-proxy="true">
+		<!--切入点指明了在执行Service的所有方法时产生事务拦截操作 -->
+		<aop:pointcut id="pointcut" expression="execution(* com.wxh.service..*.*(..))" />
+		<!--定义了将采用何种拦截操作，这里引用到 txAdvice -->
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="pointcut" />
+	</aop:config>
+
+	<!-- Dao -->
+	<bean id="BaseDaoImpl" class="com.wxh.hibernate.BaseDaoImpl">
+		<property name="sessionFactory">
+			<ref bean="sessionFactory" />
+		</property>
+	</bean>
+
+	<!-- Service -->
+	<bean id="MVDService" class="com.wxh.service.MVDService">
+		<property name="daoImpl">
+			<ref bean="BaseDaoImpl" />
+		</property>
+	</bean>
+	<bean id="PlanService" class="com.wxh.service.PlanService">
+		<property name="daoImpl">
+			<ref bean="BaseDaoImpl" />
+		</property>
+	</bean>
+
+	<!-- 用户Action -->
+	<bean id="MaintenanceAction" class="com.wxh.action.MaintenanceAction"
+		scope="session">
+		<property name="mService">
+			<ref bean="MVDService" />
+		</property>
+	</bean>
+	<bean id="PlanQueryAction" class="com.wxh.action.PlanQueryAction"
+		scope="session">
+		<property name="pService">
+			<ref bean="PlanService" />
+		</property>
+	</bean>
+	<bean id="OndutyPlanAction" class="com.wxh.action.OndutyPlanAction"
+		scope="session">
+		<property name="pService">
+			<ref bean="PlanService" />
+		</property>
+	</bean>
+</beans>

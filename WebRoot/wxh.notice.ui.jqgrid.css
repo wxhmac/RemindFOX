@@ -1,0 +1,18 @@
+.ui-jqgrid tr.jqgrow td {
+	font: bold 200%/100% "Lucida Grande", Arial, sans-serif;
+	margin: 0;
+	color: #fff;
+	text-transform: uppercase;
+	letter-spacing: -2px;
+	background: #3d85c6;
+	overflow: hidden;
+	white-space: pre;
+	height: 80px;
+	padding: 0 2px 0 2px;
+	border-bottom-width: 1px;
+	border-bottom-color: inherit;
+	border-bottom-style: solid;
+}
+
+
+

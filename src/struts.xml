@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 2.1//EN" "http://struts.apache.org/dtds/struts-2.1.dtd">
+<struts>
+	<!--struts2的开发模式 -->
+	<constant name="struts.devMode" value="true" />
+	<package name="default" namespace="/" extends="json-default">
+		<action name="getRecords" class="MaintenanceAction" method="getRecords">
+			<result name="showdata" type="json">
+				<param name="includeProperties">
+					^gridModel\[\d+\]\.\w+, rows, page, total,
+					record</param>
+				<param name="noCache">true</param>
+				<param name="ignoreHierarchy">false</param>
+			</result>
+		</action>
+		<action name="queryPlans" class="PlanQueryAction" method="queryPlans">
+			<result name="showdata" type="json">
+				<param name="includeProperties">
+					^gridModel\[\d+\]\.\w+, rows, page, total,
+					record</param>
+				<param name="noCache">true</param>
+				<param name="ignoreHierarchy">false</param>
+			</result>
+		</action>
+		<action name="queryDutyPlans" class="OndutyPlanAction" method="queryDutyPlans">
+			<result name="showdata" type="json">
+				<param name="includeProperties">
+					^gridModel\[\d+\]\.\w+, rows, page, total,
+					record</param>
+				<param name="noCache">true</param>
+				<param name="ignoreHierarchy">false</param>
+			</result>
+		</action>
+	</package>
+</struts>    
